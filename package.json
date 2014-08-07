@@ -1,0 +1,18 @@
+{
+  "name": "hitbox-chat",
+  "version": "0.1.0",
+  "description": "A chat client for hitbox.tv",
+  "author": "tsholmes",
+  "license": "BSD-2-Clause",
+  "engines": [
+    "node >= 0.10.0"
+  ],
+  "dependencies": {
+    "socket.io-client": "~0.9.16",
+    "request": "~2.40.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/tsholmes/hitbox-chat.git"
+  }
+}
