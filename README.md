@@ -32,6 +32,8 @@ client.on("connect", function() {
     // slow mode enabled. limited to 1 message every slowTime seconds
   }).on("info", function(text) {
     // info message (bans, kicks, etc)
+  }).on("poll", function(question, options, voters) {
+    // poll (sent at the start and every time someone votes)
   }).on("other", function(method,params) {
     // something else that isn't handled yet. params is raw event JSON
   });

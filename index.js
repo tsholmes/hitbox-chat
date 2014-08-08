@@ -109,6 +109,8 @@ HitboxChannel.prototype = {
       this.emit("slow", message.params.slowTime);
     } else if (message.method == "infoMsg") {
       this.emit("info", message.params.text);
+    } else if (message.method == "pollMsg") {
+      this.emit("poll", message.params.question, message.params.choices, message.params.voters);
     } else {
       // catch all so if something else happens its more visible
       this.emit("other", message.method, message.params);
