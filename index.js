@@ -1,11 +1,11 @@
 
 var request = require("request");
 var socketio_client = require("socket.io-client");
+var utils = require("./utils");
 
 function HitboxChatClient(user, token) {
   if (this.__proto__ != HitboxChatClient.prototype) return new HitboxChatClient(user, token);
 
-  this.callbacks = {};
   this.channels = {};
   this.user = user;
   this.token = token;
@@ -14,24 +14,6 @@ function HitboxChatClient(user, token) {
   this.open();
 }
 HitboxChatClient.prototype = {
-  // emitter
-  on: function(type, callback) {
-    if (!(type in this.callbacks)) {
-      this.callbacks[type] = [];
-    }
-    this.callbacks[type].push(callback);
-    return this;
-  },
-  emit: function(type) {
-    var args = Array.prototype.slice.call(arguments);
-    args.shift();
-    if (type in this.callbacks) {
-      var cbs = this.callbacks[type];
-      for (var i = 0; i < cbs.length; i++) {
-        cbs[i].apply(this, args);
-      }
-    }
-  },
   // internal handlers
   onconnect: function(socket) {
     this.connected = true;
@@ -106,33 +88,15 @@ HitboxChatClient.prototype = {
     return this.channels[channel] = new HitboxChannel(this,channel);
   }
 }
+utils.mixin(HitboxChatClient, utils.emitter);
 
 function HitboxChannel(client, channel) {
   if (this.__proto__ != HitboxChannel.prototype) return new HitboxChannel(client, channel);
 
   this.channel = channel;
   this.client = client;
-  this.callbacks = {};
 }
 HitboxChannel.prototype = {
-  // emitter
-  on: function(type, callback) {
-    if (!(type in this.callbacks)) {
-      this.callbacks[type] = [];
-    }
-    this.callbacks[type].push(callback);
-    return this;
-  },
-  emit: function(type) {
-    var args = Array.prototype.slice.call(arguments);
-    args.shift();
-    if (type in this.callbacks) {
-      var cbs = this.callbacks[type];
-      for (var i = 0; i < cbs.length; i++) {
-        cbs[i].apply(this, args);
-      }
-    }
-  },
   // internal handlers
   onmessage: function(message) {
     if (message.method == "loginMsg") {
@@ -151,5 +115,6 @@ HitboxChannel.prototype = {
     }
   }
 }
+utils.mixin(HitboxChannel, utils.emitter);
 
 module.exports = HitboxChatClient;

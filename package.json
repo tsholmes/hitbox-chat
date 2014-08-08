@@ -1,7 +1,7 @@
 {
   "name": "hitbox-chat",
   "version": "0.1.0",
-  "description": "A chat client for hitbox.tv",
+  "description": "A chat client library for hitbox.tv",
   "author": "tsholmes",
   "license": "BSD-2-Clause",
   "engines": [
