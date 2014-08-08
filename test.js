@@ -8,18 +8,21 @@ var rl = readline.createInterface({
 });
 
 rl.question("channel: ", function(answer) {
-  var client = new HitboxChatClient(answer).on("login", function(name, role) {
-    console.log(name, role);
-  }).on("chat", function(name,text,role) {
-    console.log(name + ": " + text);
-  }).on("motd", function(text) {
-    console.log("=== " + text + " ===");
-  }).on("slow", function(slowTime) {
-    console.log("*** Slow mode: " + slowTime + "s ***");
-  }).on("info", function(text) {
-    console.log("--- " + text + " ---");
-  }).on("other", function(method,params) {
-    console.log(method, params);
+  var client = new HitboxChatClient().on("connect", function() {
+    var channel = client.joinChannel(answer);
+    channel.on("login", function(name, role) {
+      console.log(name, role);
+    }).on("chat", function(name,text,role) {
+      console.log(name + ": " + text);
+    }).on("motd", function(text) {
+      console.log("=== " + text + " ===");
+    }).on("slow", function(slowTime) {
+      console.log("*** Slow mode: " + slowTime + "s ***");
+    }).on("info", function(text) {
+      console.log("--- " + text + " ---");
+    }).on("other", function(method,params) {
+      console.log(method, params);
+    });
   });
   rl.close();
 });
