@@ -1,13 +1,22 @@
 
 var socketio_client = require("socket.io-client");
 var utils = require("./utils");
+var credential = require("./credential");
 
-function HitboxChatClient(user, token) {
-  if (this.__proto__ != HitboxChatClient.prototype) return new HitboxChatClient(user, token);
+function HitboxChatClient(opts) {
+  if (!utils.isa(this, HitboxChatClient)) return new HitboxChatClient(opts);
+
+  opts = opts || {};
+
+  if (opts.name && opts.token) {
+    this.credential = new credential.Immediate(opts.name, opts.token);
+  } else if (opts.name && opts.pass) {
+    this.credential = new credential.UserPass(opts.name, opts.pass);
+  } else {
+    this.credential = new credential.Dummy();
+  }
 
   this.channels = {};
-  this.user = user;
-  this.token = token;
   this.connected = false;
 
   this.open();
@@ -36,7 +45,6 @@ HitboxChatClient.prototype = {
   },
   // internal websocket functions
   send: function(method,params) {
-    console.log({method:method,params:params});
     this.socket.emit("message", {
       method: method,
       params: params
@@ -44,7 +52,7 @@ HitboxChatClient.prototype = {
   },
   open: function() {
     var t = this;
-    utils.safeRequest("http://www.hitbox.tv/api/chat/servers?redis=true", function(body){
+    utils.safeGet("http://www.hitbox.tv/api/chat/servers?redis=true", function(body){
       var servers = JSON.parse(body);
       var sock = socketio_client.connect("http://" + servers[0].server_ip);
       sock.on("connect", function() {
@@ -72,7 +80,7 @@ HitboxChatClient.prototype = {
 utils.mixin(HitboxChatClient, utils.emitter);
 
 function HitboxChannel(client, channel) {
-  if (this.__proto__ != HitboxChannel.prototype) return new HitboxChannel(client, channel);
+  if (!utils.isa(this, HitboxChannel)) return new HitboxChannel(client, channel);
 
   this.channel = channel;
   this.client = client;
@@ -110,18 +118,17 @@ HitboxChannel.prototype = {
     if (this.joined) {
       return;
     }
-    var joinParams = {
-      channel: this.channel,
-      name: "UnknownSoldier",
-      token: null,
-      isAdmin: false
-    };
-    if (this.client.user && this.client.token) {
-      joinParams.name = this.client.user;
-      joinParams.token = this.client.token;
-    }
     this.joined = true;
-    this.client.send("joinChannel", joinParams);
+    var t = this;
+    this.client.credential.withCredential(function(name,token) {
+      var joinParams = {
+        channel: t.channel,
+        name: name,
+        token: token,
+        isAdmin: false
+      };
+      t.client.send("joinChannel", joinParams);
+    });
   },
   leave: function() {
     if (!this.joined) {
@@ -146,11 +153,14 @@ HitboxChannel.prototype = {
     });
   },
   votePoll: function(choice) {
-    this.client.send("votePoll", {
-      channel: this.channel,
-      name: this.name,
-      token: this.client.token,
-      choice: choice.toString()
+    var t = this;
+    this.client.credential.withCredential(function(name,token) {
+      t.client.send("votePoll", {
+        channel: t.channel,
+        name: name,
+        token: token,
+        choice: choice.toString()
+      });
     });
   }
 }
