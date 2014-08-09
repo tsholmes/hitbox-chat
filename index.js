@@ -36,6 +36,7 @@ HitboxChatClient.prototype = {
   },
   // internal websocket functions
   send: function(method,params) {
+    console.log({method:method,params:params});
     this.socket.emit("message", {
       method: method,
       params: params
@@ -61,19 +62,11 @@ HitboxChatClient.prototype = {
       return this.channels[channel];
     }
 
-    var joinParams = {
-      channel: channel,
-      name: "UnknownSoldier",
-      token: null,
-      isAdmin: false
-    };
-    if (this.user && this.token) {
-      joinParams.name = this.user;
-      joinParams.token = this.token;
-    }
-    this.send("joinChannel", joinParams);
+    var ch = this.channels[channel] = new HitboxChannel(this,channel);
 
-    return this.channels[channel] = new HitboxChannel(this,channel);
+    ch.join();
+
+    return ch;
   }
 }
 utils.mixin(HitboxChatClient, utils.emitter);
@@ -83,11 +76,19 @@ function HitboxChannel(client, channel) {
 
   this.channel = channel;
   this.client = client;
+  this.joined = false;
+  this.loggedIn = false;
+  this.role = null;
+  this.name = null;
+  this.defaultColor = "0000FF";
 }
 HitboxChannel.prototype = {
   // internal handlers
   onmessage: function(message) {
     if (message.method == "loginMsg") {
+      this.loggedin = true;
+      this.name = message.params.name;
+      this.role = message.params.role;
       this.emit("login", message.params.name, message.params.role);
     } else if (message.method == "chatMsg") {
       this.emit("chat", message.params.name, message.params.text, message.params.role);
@@ -103,6 +104,54 @@ HitboxChannel.prototype = {
       // catch all so if something else happens its more visible
       this.emit("other", message.method, message.params);
     }
+  },
+  // external handlers
+  join: function() {
+    if (this.joined) {
+      return;
+    }
+    var joinParams = {
+      channel: this.channel,
+      name: "UnknownSoldier",
+      token: null,
+      isAdmin: false
+    };
+    if (this.client.user && this.client.token) {
+      joinParams.name = this.client.user;
+      joinParams.token = this.client.token;
+    }
+    this.joined = true;
+    this.client.send("joinChannel", joinParams);
+  },
+  leave: function() {
+    if (!this.joined) {
+      return;
+    }
+    this.client.send("partChannel", {
+      channel: this.channel,
+      name: this.name
+    });
+    this.joined = false;
+    this.loggedIn = false;
+    this.role = null;
+    this.name = null;
+  },
+  sendMessage: function(text,nameColor) {
+    var color = nameColor || this.defaultColor;
+    this.client.send("chatMsg", {
+      channel: this.channel,
+      name: this.name,
+      nameColor: color,
+      text: text
+    });
+  },
+  votePoll: function(choice) {
+    this.client.send("votePoll", {
+      channel: this.channel,
+      name: this.name,
+      token: this.client.token,
+      choice: choice.toString()
+    });
   }
 }
 utils.mixin(HitboxChannel, utils.emitter);
