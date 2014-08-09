@@ -1,5 +1,4 @@
 
-var request = require("request");
 var socketio_client = require("socket.io-client");
 var utils = require("./utils");
 
@@ -44,23 +43,12 @@ HitboxChatClient.prototype = {
   },
   open: function() {
     var t = this;
-    request("http://hitbox.tv/api/chat/servers", function(_,_,body){
+    utils.safeRequest("http://www.hitbox.tv/api/chat/servers?redis=true", function(body){
       var servers = JSON.parse(body);
-      var found = false;
-      var sockets = [];
-      for (var i = 0; i < servers.length; i++) {
-        if (servers[i].server_type != "chat" || servers[i].server_enabled != "1") continue;
-        var sock = socketio_client.connect("http://" + servers[i].server_ip);
-        sockets.push(sock);
-        sock.on("connect", function(){
-          if (found) {
-            this.disconnect();
-            return;
-          }
-          found = true;
-          t.onconnect(this);
-        });
-      }
+      var sock = socketio_client.connect("http://" + servers[0].server_ip);
+      sock.on("connect", function() {
+        t.onconnect(sock);
+      });
     });
   },
   // external API functions

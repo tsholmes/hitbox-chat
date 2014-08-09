@@ -1,4 +1,7 @@
 
+var request = require("request");
+var zlib = require("zlib");
+
 module.exports = {
   mixin: function(func, mix) {
     for (var method in mix) {
@@ -25,5 +28,15 @@ module.exports = {
         }
       }
     }
+  },
+  safeRequest: function(url, callback) {
+    request({url:url, encoding:null}, function(_,res,body){
+      var encoding = res.headers["content-encoding"] || "";
+      if (~encoding.indexOf("gzip") || ~encoding.indexOf("deflate")) {
+        zlib.unzip(body, function(_,data){callback(data.toString());});
+      } else {
+        callback(body.toString());
+      }
+    });
   }
 }
