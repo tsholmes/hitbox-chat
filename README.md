@@ -34,7 +34,7 @@ Adds an event listener
                   | ("motd",  Function(text:String))
                   | ("slow",  Function(slowTime:Number))
                   | ("info",  Function(text:String))
-                  | ("poll",  Function(question:String, choices:Array[Object], voters: Array[String]))
+                  | ("poll",  Function(poll:HitboxPoll))
                   | ("other", Function(method:String, params:Object)
 ```
 
@@ -52,6 +52,45 @@ Votes for the current poll with the choice specified by (0-based) index `choice`
 
 #### HitboxChannel#defaultColor:String
 The default name color when sending messages
+
+### HitboxPoll
+
+#### HitboxPoll#on(event:String, callback:Function)
+Adds an event listener
+```
+(event, callback) = ("pause", Function())
+                  | ("start", Function()) // sent on restart after pause
+                  | ("vote",  Function()) // sent when (every time?) someone new votes
+                  | ("end",   Function())
+```
+
+#### HitboxPoll#vote(choice:Number)
+Votes for the choice specified by (0-based) index `choice`.
+
+#### HitboxPoll#startTime:Date
+The time the poll was started
+
+#### HitboxPoll#status:String
+The status of the poll. One of `{ started, paused, ended }`.
+
+#### HitboxPoll#question:String
+The question the poll is asking.
+
+#### HitboxPoll#choices:Array[Object]
+The choices for responding to the poll.
+```
+choices = [
+  { text: "choice 0", votes: 1 },
+  { text: "choice 1", votes: 4 },
+  ...
+]
+```
+
+#### HitboxPoll#voters:Array[String]
+The list of usernames that voted in the poll.
+
+#### HitboxPoll#votes:Number
+The number of votes cast in the poll. (same as `voters.length`)
 
 ##Example Usage
 
@@ -82,9 +121,9 @@ client.on("connect", function() {
     // slow mode enabled. limited to 1 message every slowTime seconds
   }).on("info", function(text) {
     // info message (bans, kicks, etc)
-  }).on("poll", function(question, options, voters) {
-    // poll (sent at the start and every time someone votes)
-    channel.votePoll(0);
+  }).on("poll", function(poll) {
+    // poll started
+    poll.vote(0);
   }).on("other", function(method,params) {
     // something else that isn't handled yet. params is raw event JSON
   });

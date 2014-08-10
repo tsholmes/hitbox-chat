@@ -20,8 +20,8 @@ rl.question("channel: ", function(answer) {
       console.log("*** Slow mode: " + slowTime + "s ***");
     }).on("info", function(text) {
       console.log("--- " + text + " ---");
-    }).on("poll", function(question, options, voters) {
-      console.log("??? " + question + " " + JSON.stringify(options));
+    }).on("poll", function(poll) {
+      console.log("??? " + poll.question + " " + JSON.stringify(poll.options));
     }).on("other", function(method,params) {
       console.log(method, params);
     });
