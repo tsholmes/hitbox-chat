@@ -62,10 +62,14 @@ HitboxChatClient.prototype = {
     var t = this;
     utils.safeGet("http://www.hitbox.tv/api/chat/servers?redis=true", function(body){
       var servers = JSON.parse(body);
-      var sock = socketio_client.connect("http://" + servers[0].server_ip);
-      sock.on("connect", function() {
-        t.onconnect(sock);
-      });
+      var i = -1;
+      (function next() {
+        i = (i + 1) % servers.length;
+        var sock = socketio_client.connect("http://" + servers[i].server_ip, { timeout: 5000 });
+        sock.on("connect", t.onconnect.bind(t, sock));
+        sock.on("connect_timeout", next);
+        sock.on("error", next);
+      })();
     });
   },
   // external API functions

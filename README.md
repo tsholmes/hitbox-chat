@@ -29,13 +29,14 @@ Joins a channel and returns the channel object
 #### HitboxChannel#on(event:String, callback:Function)
 Adds an event listener
 ```
-(event, callback) = ("login", Function(name:String, role:String))
-                  | ("chat",  Function(name:String, text:String, role:String))
-                  | ("motd",  Function(text:String))
-                  | ("slow",  Function(slowTime:Number))
-                  | ("info",  Function(text:String))
-                  | ("poll",  Function(poll:HitboxPoll))
-                  | ("other", Function(method:String, params:Object)
+(event, callback) = ("login",  Function(name:String, role:String))
+                  | ("chat",   Function(name:String, text:String, role:String))
+                  | ("motd",   Function(text:String))
+                  | ("slow",   Function(slowTime:Number))
+                  | ("info",   Function(text:String))
+                  | ("poll",   Function(poll:HitboxPoll))
+                  | ("raffle", Function(raffle:HitboxRaffle))
+                  | ("other",  Function(method:String, params:Object)
 ```
 
 #### HitboxChannel#join()
@@ -46,9 +47,6 @@ Leaves the channel. Stops receiving events on this channel (once the server rece
 
 #### HitboxChannel#sendMessage(text:String, nameColor:String)
 Sends a message to this channel with the given name color (or the default color if null)
-
-#### HitboxChannel#votePoll(choice:Number)
-Votes for the current poll with the choice specified by (0-based) index `choice`.
 
 #### HitboxChannel#defaultColor:String
 The default name color when sending messages
@@ -92,6 +90,48 @@ The list of usernames that voted in the poll.
 #### HitboxPoll#votes:Number
 The number of votes cast in the poll. (same as `voters.length`)
 
+### HitboxRaffle
+
+#### HitboxRaffle#on(event:String, callback:Function)
+Adds an event listener
+```
+(event, callback) = ("pause",  Function()) // picking winner
+                  | ("start",  Function()) // restart after pause
+                  | ("vote",   Function())
+                  | ("end",    Function()) // winner chosen
+                  | ("hide",   Function()) // hidden after winner chosen
+                  | ("delete", Function()) // deleted
+                  | ("winner", Function(name:String, email:String)) // (ADMIN ONLY) name and email of winner
+                  | ("win",    Function()) // (CLIENT ONLY) you won!
+```
+
+#### HitboxRaffle#vote(choice:Number)
+Votes for the choice specified by (0-based) index `choice`.
+
+#### HitboxRaffle#startTime:Date
+The time the raffle was started
+
+#### HitboxRaffle#status:String
+The status of the raffle. One of `{ started, paused, ended, hidden, deleted}`.
+
+#### HitboxRaffle#question:String
+The question or title of the raffle.
+
+#### HitboxRaffle#Choices:Array[Object]
+The choices for responding to the raffle.
+```
+choices = [ // ADMIN
+  { text: "choice 0", count: 1 },
+  { text: "choice 1", count: 2 },
+  ...
+]
+choices = [ // CLIENT
+  { text: "choice 0" },
+  { text: "choice 1" },
+  ...
+]
+```
+
 ##Example Usage
 
 ```
@@ -124,6 +164,12 @@ client.on("connect", function() {
   }).on("poll", function(poll) {
     // poll started
     poll.vote(0);
+  }).on("raffle", function(raffle){
+    // raffle started
+    raffle.vote(0);
+    raffle.on("win", function() {
+      // you won!
+    });
   }).on("other", function(method,params) {
     // something else that isn't handled yet. params is raw event JSON
   });

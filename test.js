@@ -21,7 +21,9 @@ rl.question("channel: ", function(answer) {
     }).on("info", function(text) {
       console.log("--- " + text + " ---");
     }).on("poll", function(poll) {
-      console.log("??? " + poll.question + " " + JSON.stringify(poll.options));
+      console.log("??? " + poll.question + " " + JSON.stringify(poll.choices));
+    }).on("raffle", function(raffle) {
+      console.log("!!! " + raffle.question + " " + JSON.stringify(raffle.choices));
     }).on("other", function(method,params) {
       console.log(method, params);
     });
