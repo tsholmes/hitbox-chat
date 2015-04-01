@@ -138,7 +138,7 @@ choices = [ // CLIENT
 var HitboxChatClient = require("hitbox-chat");
 
 // (username, token) or () for guest
-var client = new HitboxChatClient({user:"tsholmes", pass:"hunter2"});
+var client = new HitboxChatClient({name:"tsholmes", pass:"hunter2"});
 client.on("connect", function() {
   // handle connect
   var channel = client.joinChannel("tsholmes");
